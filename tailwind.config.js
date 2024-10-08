@@ -2,6 +2,10 @@
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
+    colors: {
+      primary: "#5c6ac4",
+      secondary: "#ecc94b",
+    },
     extend: {
       fontSize: {
         sm: "clamp(0.7rem, 0.09vw + 0.68rem, 0.75rem)",
