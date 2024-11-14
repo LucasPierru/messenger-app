@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useRef, useState, KeyboardEvent } from "react";
-import { socket } from "../socket";
+import { getSocket } from "../socket";
 import {
   Conversation,
   getConversation,
@@ -15,11 +15,14 @@ export default function Chat(props: IAboutProps) {
     {} as Conversation
   );
   const messageRef = useRef<HTMLInputElement>(null);
+  const socket = getSocket(localStorage.getItem("token") || "");
 
   useEffect(() => {
     socket.connect();
-    joinRoom();
-    setConversation(getConversation(id!));
+    if (id) {
+      joinRoom();
+      setConversation(getConversation(id));
+    }
     listenToMessages();
 
     return () => leaveRoom();
@@ -69,36 +72,40 @@ export default function Chat(props: IAboutProps) {
 
   return (
     <main className="flex flex-col w-full">
-      <div className="flex items-center gap-2 p-4 shadow-xl">
-        <img
-          className="rounded-full"
-          src={conversation?.imageUrl}
-          alt={conversation?.title}
-          height={40}
-          width={40}
-        />
-        <h1 className="font-semibold">{conversation?.title}</h1>
-      </div>
-      <div className="flex flex-col gap-2 grow p-4">
-        {conversation?.messages?.map((message, index) => {
-          return (
-            <span
-              className={`w-fit max-w-[33%] px-4 py-1 rounded-2xl break-words ${message.senderId === "1" ? "bg-[#0184fe] self-end" : "bg-[#303131]"}`}
-              key={index}
-            >
-              {message.content}
-            </span>
-          );
-        })}
-      </div>
-      <div className="p-4">
-        <input
-          className="bg-[#323234] rounded-full py-2 px-4 w-full"
-          placeholder="Aa"
-          ref={messageRef}
-          onKeyDown={sendMessage}
-        />
-      </div>
+      {id && (
+        <>
+          <div className="flex items-center gap-2 p-4 shadow-xl">
+            <img
+              className="rounded-full"
+              src={conversation?.imageUrl}
+              alt={conversation?.title}
+              height={40}
+              width={40}
+            />
+            <h1 className="font-semibold">{conversation?.title}</h1>
+          </div>
+          <div className="flex flex-col gap-2 grow p-4">
+            {conversation?.messages?.map((message, index) => {
+              return (
+                <span
+                  className={`w-fit max-w-[33%] px-4 py-1 rounded-2xl break-words ${message.senderId === "1" ? "bg-[#0184fe] self-end" : "bg-[#303131]"}`}
+                  key={index}
+                >
+                  {message.content}
+                </span>
+              );
+            })}
+          </div>
+          <div className="p-4">
+            <input
+              className="bg-[#323234] rounded-full py-2 px-4 w-full"
+              placeholder="Aa"
+              ref={messageRef}
+              onKeyDown={sendMessage}
+            />
+          </div>
+        </>
+      )}
     </main>
   );
 }

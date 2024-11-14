@@ -18,7 +18,7 @@ const Conversation = ({
   return (
     <Link
       className={`flex items-center p-2 mx-2 gap-2 rounded-xl lg:min-w-80 ${id === conversationId ? "bg-[#25313f]" : ""}`}
-      to={`/${id}`}
+      to={`/conversation/${id}`}
     >
       <img
         className="rounded-full"

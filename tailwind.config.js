@@ -2,11 +2,15 @@
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
-    colors: {
-      primary: "#5c6ac4",
-      secondary: "#ecc94b",
-    },
     extend: {
+      colors: {
+        primary: "#5c6ac4",
+        secondary: "#ecc94b"
+      },
+      backgroundImage: {
+        "messenger-gradient":
+          "linear-gradient(83.84deg, #0088FF -6.87%, #A033FF 26.54%, #FF5C87 58.58%)"
+      },
       fontSize: {
         sm: "clamp(0.7rem, 0.09vw + 0.68rem, 0.75rem)",
         base: "clamp(0.88rem, 0.23vw + 0.82rem, 1rem)",
@@ -16,9 +20,20 @@ export default {
         "3xl": "clamp(2.14rem, 1.86vw + 1.67rem, 3.16rem)",
         "4xl": "clamp(2.67rem, 2.8vw + 1.97rem, 4.21rem)",
         "5xl": "clamp(3.34rem, 4.13vw + 2.3rem, 5.61rem)",
-        "6xl": "clamp(4.17rem, 6.01vw + 2.67rem, 7.48rem)",
+        "6xl": "clamp(4.17rem, 6.01vw + 2.67rem, 7.48rem)"
       },
-    },
+      fontWeight: {
+        thin: "100",
+        extralight: "200",
+        light: "300",
+        normal: "400",
+        medium: "500",
+        semibold: "600",
+        bold: "700",
+        extrabold: "800",
+        black: "900"
+      }
+    }
   },
-  plugins: [],
+  plugins: []
 };
