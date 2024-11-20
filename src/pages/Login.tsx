@@ -1,8 +1,32 @@
-import { FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  loginSchema,
+  RegisterFormData
+} from "../lib/inputValidation/registrationValidation";
+import { login } from "../api/auth/auth";
 
 export default function Login() {
-  const onSubmit = (formData: FormEvent<HTMLFormElement>) => {};
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(loginSchema)
+  });
+  const navigate = useNavigate();
+
+  const onSubmit = async (data: RegisterFormData) => {
+    const { email, password } = data;
+    const { data: userData, error } = await login({
+      email,
+      password
+    });
+    reset();
+    navigate("/conversation");
+  };
 
   return (
     <main className="bg-[#fffefe]">
@@ -15,14 +39,20 @@ export default function Login() {
             Connect with your friends and family, build your community, and
             deepen your interests.
           </p>
-          <form onSubmit={onSubmit} className="flex flex-col gap-2 max-w-md">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex flex-col gap-2 max-w-md"
+          >
             <input
-              className="bg-[#f4f5f4] py-2 px-4 rounded-xl outline-none border focus:border-[#0B7CFE]"
+              className="bg-[#f4f5f4] text-black py-2 px-4 rounded-xl col-span-full outline-none border focus:border-[#0B7CFE]"
               placeholder="Email"
+              {...register("email")}
             />
             <input
-              className="bg-[#f4f5f4] py-2 px-4 rounded-xl outline-none border focus:border-[#0B7CFE]"
+              className="bg-[#f4f5f4] text-black py-2 px-4 rounded-xl col-span-full outline-none border focus:border-[#0B7CFE]"
               placeholder="Password"
+              type="password"
+              {...register("password")}
             />
             <button
               type="submit"

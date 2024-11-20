@@ -1,7 +1,19 @@
+/* eslint-disable no-underscore-dangle */
+import { useQuery } from "@tanstack/react-query";
+import { PencilSquareIcon } from "@heroicons/react/24/solid";
+import { Link } from "react-router-dom";
+import { fetchConversations } from "../../api/conversations/conversations";
 import Conversation from "../conversation/conversation";
 
 const Conversations = () => {
-  const conversations = [
+  const query = useQuery({
+    queryKey: ["conversations"],
+    queryFn: fetchConversations
+  });
+
+  console.log({ data: query.data });
+
+  /* const conversations = [
     {
       id: "room-1",
       imageUrl: "/Punk.jpg",
@@ -14,22 +26,35 @@ const Conversations = () => {
       title: "group chat",
       lastMessage: "John: Hello! how are you"
     }
-  ];
+  ]; */
 
   return (
     <div className="border-r border-r-[rgba(255,255,255,0.5)] min-h-full">
       <h1 className="text-lg font-bold mx-2 mb-4">Chats</h1>
-      {conversations.map((conversation) => {
-        return (
-          <Conversation
-            key={conversation.id}
-            id={conversation.id}
-            imageUrl={conversation.imageUrl}
-            title={conversation.title}
-            lastMessage={conversation.lastMessage}
-          />
-        );
-      })}
+
+      {query.data &&
+        query.data.conversations &&
+        query.data?.conversations.length > 0 &&
+        query.data.conversations.map((conversation) => {
+          return (
+            <Conversation
+              key={conversation._id}
+              id={conversation._id}
+              imageUrl={conversation.imageUrl}
+              title={conversation.name}
+              lastMessage={conversation.lastMessage}
+            />
+          );
+        })}
+      <div className="lg:min-w-80 p-2 mx-2">
+        <Link
+          to="/conversation/new"
+          className="flex flex-col items-center mx-auto"
+        >
+          <PencilSquareIcon className="w-8 h-8" />
+          Create a conversation
+        </Link>
+      </div>
     </div>
   );
 };
