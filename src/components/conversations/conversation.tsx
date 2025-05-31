@@ -8,10 +8,8 @@ import Conversation from "../conversation/conversation";
 const Conversations = () => {
   const query = useQuery({
     queryKey: ["conversations"],
-    queryFn: fetchConversations
+    queryFn: fetchConversations,
   });
-
-  console.log({ data: query.data });
 
   /* const conversations = [
     {
@@ -29,8 +27,8 @@ const Conversations = () => {
   ]; */
 
   return (
-    <div className="border-r border-r-[rgba(255,255,255,0.5)] min-h-full">
-      <h1 className="text-lg font-bold mx-2 mb-4">Chats</h1>
+    <div className="border-r border-r-border min-h-full">
+      <h1 className="text-lg font-semibold px-2 py-4 border-b border-b-border">Chats</h1>
 
       {query.data &&
         query.data.conversations &&
@@ -46,11 +44,8 @@ const Conversations = () => {
             />
           );
         })}
-      <div className="lg:min-w-80 p-2 mx-2">
-        <Link
-          to="/conversation/new"
-          className="flex flex-col items-center mx-auto"
-        >
+      <div className="lg:min-w-80 p-4 mx-2">
+        <Link to="/conversation/new" className="flex flex-col items-center mx-auto">
           <PencilSquareIcon className="w-8 h-8" />
           Create a conversation
         </Link>

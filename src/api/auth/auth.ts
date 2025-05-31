@@ -29,3 +29,12 @@ export const signup = async ({ email, firstName, lastName, password }: SignupCre
     return { data: null, error };
   }
 };
+
+export const logout = async () => {
+  try {
+    localStorage.removeItem("token"); // Save the token
+    return { data: { success: true }, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
+};

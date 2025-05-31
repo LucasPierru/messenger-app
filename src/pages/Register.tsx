@@ -1,10 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  RegisterFormData,
-  registerSchema
-} from "../lib/inputValidation/registrationValidation";
+import { RegisterFormData, registerSchema } from "../lib/inputValidation/registrationValidation";
 import { signup } from "../api/auth/auth";
 
 export default function Register() {
@@ -12,9 +9,9 @@ export default function Register() {
     register,
     handleSubmit,
     formState: { errors },
-    reset
+    reset,
   } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema)
+    resolver: zodResolver(registerSchema),
   });
   const navigate = useNavigate();
 
@@ -24,8 +21,13 @@ export default function Register() {
       email,
       firstName,
       lastName,
-      password
+      password,
     });
+    console.log({ userData, error });
+    if (error) {
+      console.error("Error signing up:", error);
+      return;
+    }
     reset();
     navigate("/conversation");
   };
@@ -38,13 +40,9 @@ export default function Register() {
             A place for meaningful conversations
           </h1>
           <p className="my-5 text-gray-600">
-            Connect with your friends and family, build your community, and
-            deepen your interests.
+            Connect with your friends and family, build your community, and deepen your interests.
           </p>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="grid grid-cols-2 gap-2 max-w-md"
-          >
+          <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 gap-2 max-w-md">
             <input
               className="bg-[#f4f5f4] text-black py-2 px-4 rounded-xl col-span-full outline-none border focus:border-[#0B7CFE]"
               placeholder="Email"
@@ -72,10 +70,7 @@ export default function Register() {
               {...register("confirmPassword")}
               type="password"
             />
-            <button
-              type="submit"
-              className="bg-[#0B7CFE] mt-4 text-white w-fit rounded-full py-2 px-4 font-bold"
-            >
+            <button type="submit" className="bg-[#0B7CFE] mt-4 text-white w-fit rounded-full py-2 px-4 font-bold">
               Sign up
             </button>
           </form>
