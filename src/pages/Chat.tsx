@@ -1,38 +1,57 @@
-import { useParams } from "react-router-dom";
-import { useEffect, useRef, useState, KeyboardEvent, Key, ChangeEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState, KeyboardEvent, Key, ChangeEvent, useMemo } from "react";
 import { getSocket } from "../socket";
-import { Conversation, getConversation, Message } from "../lib/data/conversations";
 import { Input } from "@/components/ui/input";
-import { fetchProfiles } from "@/api/profile/profile";
+import { fetchProfile, fetchProfiles } from "@/api/profile/profile";
+import { IUser } from "@/types/user";
+import { Button } from "@/components/ui/button";
+import { createConversation, fetchMessages } from "@/api/conversations/conversations";
+import { IMessage } from "@/types/message";
 
 export interface IAboutProps {}
 
 export default function Chat(props: IAboutProps) {
   const { id } = useParams();
-  const [conversation, setConversation] = useState<Conversation>({} as Conversation);
+  const navigate = useNavigate();
+  const [conversation, setConversation] = useState<IMessage[]>([]);
+  const [searchedProfiles, setSearchedProfiles] = useState<IUser[]>([]);
+  const [selectedProfiles, setSelectedProfiles] = useState<IUser[]>([]);
   const messageRef = useRef<HTMLInputElement>(null);
-  const socket = getSocket(localStorage.getItem("token") || "");
+  const userRef = useRef<HTMLInputElement>(null);
+  const socket = useMemo(() => getSocket(localStorage.getItem("token") || ""), []);
+
+  const profileQuery = useQuery({
+    queryKey: ["profile"],
+    queryFn: fetchProfile,
+  });
+
+  const getMessages = async () => {
+    if (id) {
+      const { messages } = await fetchMessages({ conversationId: id });
+      if (messages) {
+        setConversation(messages);
+      }
+    }
+  };
 
   useEffect(() => {
     socket.connect();
     if (id) {
       joinRoom();
-      setConversation(getConversation(id));
     }
+    getMessages();
     listenToMessages();
-
     return () => leaveRoom();
   }, [id]);
 
   const listenToMessages = () => {
     socket.on("message", ({ message }) => {
       setConversation((currentConversation) => {
-        const newMessages = [...currentConversation!.messages];
+        /* console.log("Current conversation before update:", currentConversation); */
+        const newMessages = [...currentConversation];
         newMessages.push(message);
-        return {
-          ...currentConversation,
-          messages: newMessages,
-        };
+        return newMessages;
       });
     });
   };
@@ -49,12 +68,11 @@ export default function Chat(props: IAboutProps) {
 
   const sendMessage = (event: KeyboardEvent<HTMLInputElement>) => {
     if (messageRef.current && messageRef.current.value && event.key === "Enter") {
-      const newMessage: Message = {
-        id: "",
-        conversationId: id!,
-        senderId: "1",
+      const newMessage: Omit<IMessage, "_id"> = {
+        conversation: id!,
+        user: profileQuery.data?.profile?._id || "",
         content: messageRef.current.value,
-        timeStamp: new Date(),
+        createdAt: new Date(),
       };
 
       socket.emit("message", id, newMessage);
@@ -62,11 +80,23 @@ export default function Chat(props: IAboutProps) {
     }
   };
 
+  const createNewConversation = async () => {
+    try {
+      const { conversation: newConversation } = await createConversation(
+        selectedProfiles.map((profile) => profile._id)
+      );
+      navigate(`/conversation/${newConversation._id}`);
+      window.location.reload();
+    } catch (error) {
+      console.error("Error creating new conversation:", error);
+    }
+  };
+
   return (
     <main className="flex flex-col justify-between w-full">
       {id && id !== "new" && (
         <>
-          <div className="flex items-center gap-2 p-4 shadow-xl">
+          <div className="flex items-center gap-2 p-4 border-b border-b-border">
             <img
               className="rounded-full"
               src={conversation?.imageUrl}
@@ -77,10 +107,10 @@ export default function Chat(props: IAboutProps) {
             <h1 className="font-semibold">{conversation?.title}</h1>
           </div>
           <div className="flex flex-col gap-2 grow p-4">
-            {conversation?.messages?.map((message, index) => {
+            {conversation?.map((message, index) => {
               return (
                 <span
-                  className={`w-fit max-w-[33%] px-4 py-1 rounded-2xl break-words ${message.senderId === "1" ? "bg-[#0184fe] self-end" : "bg-[#303131]"}`}
+                  className={`w-fit max-w-[33%] px-4 py-1 rounded-2xl break-words font-medium ${message.user === profileQuery.data?.profile?._id ? "bg-[#0184fe] text-background self-end" : "bg-border"}`}
                   key={index as Key}>
                   {message.content}
                 </span>
@@ -89,19 +119,68 @@ export default function Chat(props: IAboutProps) {
           </div>
         </>
       )}
-      <div className="flex items-center gap-2 p-4 border-b border-b-border">
-        <span className="min-w-fit">New message to:</span>
-        <input
-          className="focus:outline-none w-full"
-          onChange={async (event: ChangeEvent<HTMLInputElement>) => {
-            const { value } = event.target;
-            if (value && value.length > 2) {
-              const { profiles } = await fetchProfiles(value);
-              console.log({ profiles });
-            }
-          }}
-        />
-      </div>
+      {id === "new" && (
+        <div>
+          <div className="flex items-center gap-2 p-4 border-b border-b-border">
+            <span className="min-w-fit">New message to:</span>
+            <div className="min-w-fit flex flex-wrap gap-2">
+              {selectedProfiles.map((profile) => (
+                <span key={profile._id} className="bg-[#0184fe] text-white px-2 py-1 rounded-full cursor-pointer">
+                  {profile.firstName} {profile.lastName}
+                </span>
+              ))}
+            </div>
+            <input
+              className="focus:outline-none w-full"
+              ref={userRef}
+              onChange={async (event: ChangeEvent<HTMLInputElement>) => {
+                const { value } = event.target;
+                if (value && value.length > 2) {
+                  const { profiles } = await fetchProfiles(value);
+                  if (!profiles || profiles.length === 0) {
+                    setSearchedProfiles([]);
+                    return;
+                  }
+                  setSearchedProfiles(profiles);
+                } else {
+                  setSearchedProfiles([]);
+                }
+              }}
+              onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
+                if (event.key === "Backspace" && userRef.current!.value === "") {
+                  setSelectedProfiles((currentProfiles) => {
+                    const newProfiles = [...currentProfiles];
+                    newProfiles.pop();
+                    return newProfiles;
+                  });
+                }
+              }}
+            />
+            <Button onClick={createNewConversation}>Create</Button>
+          </div>
+          {searchedProfiles.length > 0 && (
+            <div className="flex flex-col gap-0 p-2 border-b border-b-border w-full max-h-60 overflow-y-auto">
+              {searchedProfiles.map((profile) => (
+                <button
+                  // eslint-disable-next-line no-underscore-dangle
+                  key={profile._id}
+                  type="button"
+                  className="cursor-pointer hover:bg-[#f4f5f4] px-2 py-2 rounded-lg text-left"
+                  onClick={() => {
+                    setSelectedProfiles((currentProfiles) => {
+                      return [...currentProfiles, profile];
+                    });
+                    userRef.current!.value = "";
+                    userRef.current!.focus();
+                    setSearchedProfiles([]);
+                  }}>
+                  {profile.firstName} {profile.lastName}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       <div className="p-4">
         <Input className="rounded-full py-2 px-4 w-full" placeholder="Aa" ref={messageRef} onKeyDown={sendMessage} />
       </div>

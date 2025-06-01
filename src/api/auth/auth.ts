@@ -30,6 +30,15 @@ export const signup = async ({ email, firstName, lastName, password }: SignupCre
   }
 };
 
+export const changePassword = async ({ email, password }: LoginCredentials) => {
+  try {
+    const response = await api.post("/v1/auth/change-password", { email, password });
+    return { data: response.data, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
+};
+
 export const logout = async () => {
   try {
     localStorage.removeItem("token"); // Save the token

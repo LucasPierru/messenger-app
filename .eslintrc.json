@@ -21,6 +21,7 @@
     "react/prop-types": "off", // If you're using TypeScript, prop-types are not needed
     "@typescript-eslint/explicit-module-boundary-types": "off", // Allows you to skip explicit return types in TypeScript
     "react/jsx-filename-extension": [1, { "extensions": [".tsx"] }], // Only .tsx files for JSX
+    "no-underscore-dangle": "off", // Allow underscores in variable names
     "import/extensions": [
       "error",
       "never",

@@ -1,28 +1,33 @@
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
-import { loginSchema, RegisterFormData } from "../lib/inputValidation/registrationValidation";
-import { login } from "../api/auth/auth";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ChangePasswordFormData, changePasswordSchema } from "../lib/inputValidation/registrationValidation";
+import { changePassword } from "../api/auth/auth";
 
-export default function Login() {
+export default function ChangePassword() {
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<ChangePasswordFormData>({
+    resolver: zodResolver(changePasswordSchema),
   });
   const navigate = useNavigate();
 
-  const onSubmit = async (data: RegisterFormData) => {
+  const onSubmit = async (data: ChangePasswordFormData) => {
     const { email, password } = data;
-    const { data: userData, error } = await login({
+    const { data: userData, error } = await changePassword({
       email,
       password,
     });
+    console.log({ userData, error });
+    if (error) {
+      console.error("Error signing up:", error);
+      return;
+    }
     reset();
-    navigate("/conversation");
+    navigate("/");
   };
 
   return (
@@ -35,7 +40,7 @@ export default function Login() {
           <p className="my-5 text-gray-600">
             Connect with your friends and family, build your community, and deepen your interests.
           </p>
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2 max-w-md">
+          <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 gap-2 max-w-md">
             <input
               className="bg-[#f4f5f4] text-black py-2 px-4 rounded-xl col-span-full outline-none border focus:border-[#0B7CFE]"
               placeholder="Email"
@@ -44,21 +49,20 @@ export default function Login() {
             <input
               className="bg-[#f4f5f4] text-black py-2 px-4 rounded-xl col-span-full outline-none border focus:border-[#0B7CFE]"
               placeholder="Password"
-              type="password"
               {...register("password")}
+              type="password"
+            />
+            <input
+              className="bg-[#f4f5f4] text-black py-2 px-4 rounded-xl col-span-full outline-none border focus:border-[#0B7CFE]"
+              placeholder="Confirm password"
+              {...register("confirmPassword")}
+              type="password"
             />
             <button type="submit" className="bg-[#0B7CFE] mt-4 text-white w-fit rounded-full py-2 px-4 font-bold">
-              Log in
+              Change Password
             </button>
           </form>
-          <span className="mt-4 text-gray-600">
-            Don&apos;t have an account?&nbsp;
-            <Link to="/register" className="text-[#0B7CFE]">
-              Sign up
-            </Link>
-          </span>
         </div>
-
         <img className="w-1/2" src="/login_hero.png" alt="login hero" />
       </div>
     </main>

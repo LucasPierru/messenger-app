@@ -33,14 +33,14 @@ const Conversations = () => {
       {query.data &&
         query.data.conversations &&
         query.data?.conversations.length > 0 &&
-        query.data.conversations.map((conversation) => {
+        query.data.conversations.map(({ conversation, lastMessage }) => {
           return (
             <Conversation
               key={conversation._id}
               id={conversation._id}
               imageUrl={conversation.imageUrl}
               title={conversation.name}
-              lastMessage={conversation.lastMessage}
+              lastMessage={lastMessage?.content || ""}
             />
           );
         })}

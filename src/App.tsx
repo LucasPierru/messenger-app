@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Navbar from "./components/navbar/navbar";
 import Chat from "./pages/Chat";
 import Register from "./pages/Register";
+import ChangePassword from "./pages/ChangePassword";
 
 const queryClient = new QueryClient();
 
@@ -13,6 +14,7 @@ const router = createBrowserRouter(
     <Route path="/">
       <Route index element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/change-password" element={<ChangePassword />} />
       <Route path="/conversation" element={<Navbar />}>
         <Route path="/conversation/:id" element={<Chat />} />
       </Route>
