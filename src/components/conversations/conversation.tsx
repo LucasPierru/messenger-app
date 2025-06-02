@@ -44,10 +44,10 @@ const Conversations = () => {
             />
           );
         })}
-      <div className="lg:min-w-80 p-4 mx-2">
+      <div className="p-4">
         <Link to="/conversation/new" className="flex flex-col items-center mx-auto">
           <PencilSquareIcon className="w-8 h-8" />
-          Create a conversation
+          <span className="hidden lg:block">Create a conversation</span>
         </Link>
       </div>
     </div>

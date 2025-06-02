@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState, KeyboardEvent, Key, ChangeEvent, useMemo } from "react";
+import { SendHorizontalIcon } from "lucide-react";
 import { getSocket } from "../socket";
 import { Input } from "@/components/ui/input";
 import { fetchProfile, fetchProfiles } from "@/api/profile/profile";
@@ -50,7 +51,7 @@ export default function Chat(props: IAboutProps) {
       setConversation((currentConversation) => {
         /* console.log("Current conversation before update:", currentConversation); */
         const newMessages = [...currentConversation];
-        newMessages.push(message);
+        newMessages.unshift(message);
         return newMessages;
       });
     });
@@ -66,8 +67,8 @@ export default function Chat(props: IAboutProps) {
     socket.disconnect();
   };
 
-  const sendMessage = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (messageRef.current && messageRef.current.value && event.key === "Enter") {
+  const sendMessage = () => {
+    if (messageRef.current && messageRef.current.value) {
       const newMessage: Omit<IMessage, "_id"> = {
         conversation: id!,
         user: profileQuery.data?.profile?._id || "",
@@ -77,6 +78,12 @@ export default function Chat(props: IAboutProps) {
 
       socket.emit("message", id, newMessage);
       messageRef.current.value = "";
+    }
+  };
+
+  const enterMessage = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      sendMessage();
     }
   };
 
@@ -106,11 +113,11 @@ export default function Chat(props: IAboutProps) {
             />
             <h1 className="font-semibold">{conversation?.title}</h1>
           </div>
-          <div className="flex flex-col gap-2 grow p-4">
+          <div className="flex flex-col-reverse gap-2 grow p-4 overflow-y-auto max-h-[calc(100vh-200px)]">
             {conversation?.map((message, index) => {
               return (
                 <span
-                  className={`w-fit max-w-[33%] px-4 py-1 rounded-2xl break-words font-medium ${message.user === profileQuery.data?.profile?._id ? "bg-[#0184fe] text-background self-end" : "bg-border"}`}
+                  className={`w-fit max-w-[50%] px-4 py-2 rounded-2xl break-words text-sm lg:text-base font-medium ${(message.user as IUser)._id === profileQuery.data?.profile?._id ? "bg-[#0184fe] text-background self-end" : "bg-border"}`}
                   key={index as Key}>
                   {message.content}
                 </span>
@@ -181,8 +188,11 @@ export default function Chat(props: IAboutProps) {
           )}
         </div>
       )}
-      <div className="p-4">
-        <Input className="rounded-full py-2 px-4 w-full" placeholder="Aa" ref={messageRef} onKeyDown={sendMessage} />
+      <div className="flex gap-2 p-4">
+        <Input className="rounded-full py-2 px-4 w-full" placeholder="Aa" ref={messageRef} onKeyDown={enterMessage} />
+        <Button className="rounded-full" size="icon" onClick={sendMessage}>
+          <SendHorizontalIcon />
+        </Button>
       </div>
     </main>
   );
