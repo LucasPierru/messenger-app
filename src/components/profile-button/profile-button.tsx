@@ -12,7 +12,7 @@ const ProfileButton = ({ firstName, lastName }: { firstName: string; lastName: s
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
-        <Avatar>
+        <Avatar className="w-12 h-12">
           <AvatarImage src="/Punks.jpg" />
           <AvatarFallback>
             {firstName[0]}

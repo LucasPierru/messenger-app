@@ -13,14 +13,14 @@ const Conversation = ({ id, imageUrl, title, lastMessage }: ConversationProps) =
 
   return (
     <Link
-      className={`flex items-center p-2 gap-2 max-w-sm ${id === conversationId ? "bg-primary-foreground" : ""}`}
+      className={`flex items-center p-2 gap-2 min-w-xs w-full ${id === conversationId ? "bg-primary-foreground" : ""}`}
       to={`/conversation/${id}`}>
       <Avatar>
         <AvatarImage src={imageUrl} />
         <AvatarFallback>NC</AvatarFallback>
       </Avatar>
 
-      <div className="lg:flex flex-col hidden">
+      <div className="flex flex-col">
         <span className="text-base font-semibold">{title}</span>
         <span className="text-sm line-clamp-1">{lastMessage}</span>
       </div>

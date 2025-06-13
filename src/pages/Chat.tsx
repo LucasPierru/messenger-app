@@ -9,6 +9,7 @@ import { IUser } from "@/types/user";
 import { Button } from "@/components/ui/button";
 import { createConversation, fetchMessages } from "@/api/conversations/conversations";
 import { IMessage } from "@/types/message";
+import GoBackButton from "@/components/go-back-button/go-back-button";
 
 export interface IAboutProps {}
 
@@ -100,20 +101,15 @@ export default function Chat(props: IAboutProps) {
   };
 
   return (
-    <main className="flex flex-col justify-between w-full">
+    <main className="flex flex-col justify-between w-full max-h-screen">
       {id && id !== "new" && (
         <>
           <div className="flex items-center gap-2 p-4 border-b border-b-border">
-            <img
-              className="rounded-full"
-              src={conversation?.imageUrl}
-              alt={conversation?.title}
-              height={40}
-              width={40}
-            />
-            <h1 className="font-semibold">{conversation?.title}</h1>
+            <GoBackButton />
+            <img className="rounded-full" src="/Punk.jpg" alt="Name" height={40} width={40} />
+            <h1 className="font-semibold">Name</h1>
           </div>
-          <div className="flex flex-col-reverse gap-2 grow p-4 overflow-y-auto max-h-[calc(100vh-200px)]">
+          <div className="flex flex-col-reverse gap-2 grow p-4 overflow-y-auto h-full">
             {conversation?.map((message, index) => {
               return (
                 <span
