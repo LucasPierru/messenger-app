@@ -1,3 +1,4 @@
+import { AxiosResponse } from "axios";
 import api from "../api";
 
 type LoginCredentials = {
@@ -10,9 +11,14 @@ type SignupCredentials = {
   lastName: string;
 } & LoginCredentials;
 
-export const login = async ({ email, password }: LoginCredentials) => {
+type AuthResponse = {
+  token: string;
+  lastConversationId?: string;
+};
+
+export const login = async ({ email, password }: LoginCredentials): Promise<{ data: AuthResponse | null; error: unknown }> => {
   try {
-    const response = await api.post("/v1/auth/login", { email, password });
+    const response: AxiosResponse<AuthResponse> = await api.post("/v1/auth/login", { email, password });
     localStorage.setItem("token", response.data.token); // Save the token
     return { data: response.data, error: null };
   } catch (error) {

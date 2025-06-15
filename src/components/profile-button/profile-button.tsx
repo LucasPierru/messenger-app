@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,8 +8,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { logout } from "@/api/auth/auth";
 
 const ProfileButton = ({ firstName, lastName }: { firstName: string; lastName: string }) => {
+  const navigate = useNavigate();
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
@@ -25,7 +33,11 @@ const ProfileButton = ({ firstName, lastName }: { firstName: string; lastName: s
         <DropdownMenuSeparator />
         <DropdownMenuItem>Profile</DropdownMenuItem>
         <DropdownMenuItem>Settings</DropdownMenuItem>
-        <DropdownMenuItem>Logout</DropdownMenuItem>
+        <DropdownMenuItem>
+          <button type="button" onClick={handleLogout}>
+            Logout
+          </button>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -21,8 +21,12 @@ export default function Login() {
       email,
       password,
     });
+    if (error || !userData) {
+      console.error("Login failed:", error);
+      return;
+    }
     reset();
-    navigate("/conversation");
+    navigate(userData.lastConversationId ? `/conversation/${userData.lastConversationId}` : "/conversation");
   };
 
   return (
