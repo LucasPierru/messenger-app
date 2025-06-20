@@ -1,4 +1,5 @@
 /* eslint-disable no-underscore-dangle */
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PencilSquareIcon } from "@heroicons/react/24/solid";
 import { Link, useParams } from "react-router-dom";
@@ -7,13 +8,9 @@ import { fetchProfile } from "@/api/profile/profile";
 import Conversation from "../conversation/conversation";
 import ProfileButton from "../profile-button/profile-button";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useChatStore } from "@/store/useChatStore";
 
 const Conversations = () => {
-  const query = useQuery({
-    queryKey: ["conversations"],
-    queryFn: fetchConversations,
-  });
-
   const profileQuery = useQuery({
     queryKey: ["profile"],
     queryFn: fetchProfile,
@@ -21,6 +18,25 @@ const Conversations = () => {
 
   const isMobile = useIsMobile();
   const { id } = useParams();
+
+  const getConversations = async () => {
+    const { conversations } = await fetchConversations();
+    const newConversations = conversations.map((c) => ({
+      _id: c.conversation._id,
+      name: c.conversation.name,
+      pictureUrl: c.conversation.pictureUrl,
+      isGroup: c.conversation.isGroup,
+      lastActive: c.conversation.lastActive || new Date().toISOString(),
+      lastMessage: c.lastMessage,
+    }));
+    useChatStore.getState().setConversations(newConversations);
+  };
+
+  const conversations = useChatStore((state) => state.conversations);
+
+  useEffect(() => {
+    getConversations();
+  }, []);
 
   return (
     <div
@@ -34,17 +50,16 @@ const Conversations = () => {
         )}
       </div>
       <div className="flex flex-col">
-        {query.data &&
-          query.data.conversations &&
-          query.data?.conversations.length > 0 &&
-          query.data.conversations.map(({ conversation, lastMessage }) => {
+        {conversations &&
+          conversations.length > 0 &&
+          conversations.map((conversation) => {
             return (
               <Conversation
                 key={conversation._id}
                 id={conversation._id}
-                imageUrl={conversation.imageUrl}
+                imageUrl={conversation.pictureUrl}
                 title={conversation.name}
-                lastMessage={lastMessage?.content || ""}
+                lastMessage={conversation.lastMessage?.content || ""}
               />
             );
           })}

@@ -3,8 +3,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 type ConversationProps = {
   id: string;
-  imageUrl: string;
-  title: string;
+  imageUrl?: string;
+  title?: string;
   lastMessage: string;
 };
 

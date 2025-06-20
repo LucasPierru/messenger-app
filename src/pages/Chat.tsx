@@ -10,18 +10,19 @@ import { Button } from "@/components/ui/button";
 import { createConversation, fetchMessages } from "@/api/conversations/conversations";
 import { IMessage } from "@/types/message";
 import GoBackButton from "@/components/go-back-button/go-back-button";
+import { useChatStore } from "@/store/useChatStore";
 
-export interface IAboutProps {}
-
-export default function Chat(props: IAboutProps) {
+export default function Chat() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [conversation, setConversation] = useState<IMessage[]>([]);
   const [searchedProfiles, setSearchedProfiles] = useState<IUser[]>([]);
   const [selectedProfiles, setSelectedProfiles] = useState<IUser[]>([]);
   const messageRef = useRef<HTMLInputElement>(null);
   const userRef = useRef<HTMLInputElement>(null);
   const socket = useMemo(() => getSocket(localStorage.getItem("token") || ""), []);
+  const setActiveConversation = useChatStore((s) => s.setActiveConversation);
+  const setMessages = useChatStore((s) => s.setMessages);
+  const msgs = useChatStore((s) => (id ? s.messages[id] : []));
 
   const profileQuery = useQuery({
     queryKey: ["profile"],
@@ -32,41 +33,15 @@ export default function Chat(props: IAboutProps) {
     if (id) {
       const { messages } = await fetchMessages({ conversationId: id });
       if (messages) {
-        setConversation(messages);
+        setMessages(id, messages);
       }
     }
   };
 
   useEffect(() => {
-    socket.connect();
-    if (id) {
-      joinRoom();
-    }
+    setActiveConversation(id || "new");
     getMessages();
-    listenToMessages();
-    return () => leaveRoom();
   }, [id]);
-
-  const listenToMessages = () => {
-    socket.on("message", ({ message }) => {
-      setConversation((currentConversation) => {
-        /* console.log("Current conversation before update:", currentConversation); */
-        const newMessages = [...currentConversation];
-        newMessages.unshift(message);
-        return newMessages;
-      });
-    });
-  };
-
-  const joinRoom = () => {
-    socket.emit("joinRoom", id);
-  };
-
-  const leaveRoom = () => {
-    socket.emit("leaveRoom", id);
-    socket.off("message");
-    socket.disconnect();
-  };
 
   const sendMessage = () => {
     if (messageRef.current && messageRef.current.value) {
@@ -110,7 +85,7 @@ export default function Chat(props: IAboutProps) {
             <h1 className="font-semibold">Name</h1>
           </div>
           <div className="flex flex-col-reverse gap-2 grow p-4 overflow-y-auto h-full">
-            {conversation?.map((message, index) => {
+            {msgs?.map((message, index) => {
               return (
                 <span
                   className={`w-fit max-w-[50%] px-4 py-2 rounded-2xl break-words text-sm lg:text-base font-medium ${(message.user as IUser)._id === profileQuery.data?.profile?._id ? "bg-[#0184fe] text-background self-end" : "bg-border"}`}

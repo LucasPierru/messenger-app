@@ -6,6 +6,7 @@ import Navbar from "./components/navbar/navbar";
 import Chat from "./pages/Chat";
 import Register from "./pages/Register";
 import ChangePassword from "./pages/ChangePassword";
+import { useChatSocket } from "./hooks/useChatSocket";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,8 @@ const router = createBrowserRouter(
 );
 
 function App() {
+  useChatSocket();
+
   return (
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
