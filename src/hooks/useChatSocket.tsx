@@ -4,6 +4,7 @@ import { getSocket } from "@/socket";
 
 export const useChatSocket = () => {
   const receiveMessage = useChatStore((s) => s.receiveMessage);
+  const updateConversationLastMessage = useChatStore((s) => s.updateConversationLastMessage);
   const socket = useMemo(() => getSocket(localStorage.getItem("token") || ""), []);
   const activeConversationId = useChatStore((s) => s.activeConversationId);
 
@@ -25,6 +26,7 @@ export const useChatSocket = () => {
 
     socket.on("message", (message) => {
       receiveMessage(message);
+      updateConversationLastMessage(message.conversation, message);
     });
 
     return () => {

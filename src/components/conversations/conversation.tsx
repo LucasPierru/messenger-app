@@ -27,6 +27,7 @@ const Conversations = () => {
       pictureUrl: c.conversation.pictureUrl,
       isGroup: c.conversation.isGroup,
       lastActive: c.conversation.lastActive || new Date().toISOString(),
+      lastReadAt: c.lastReadAt || null,
       lastMessage: c.lastMessage,
     }));
     useChatStore.getState().setConversations(newConversations);
@@ -41,7 +42,7 @@ const Conversations = () => {
   return (
     <div
       className={`${isMobile && !id ? "block" : "hidden"} md:block border-r border-r-border min-h-full w-full md:max-w-xs`}>
-      <div className="p-4">
+      <div className="p-4 border-b border-b-border">
         {profileQuery.data && profileQuery.data.profile && (
           <ProfileButton
             firstName={profileQuery.data.profile.firstName}
@@ -59,7 +60,7 @@ const Conversations = () => {
                 id={conversation._id}
                 imageUrl={conversation.pictureUrl}
                 title={conversation.name}
-                lastMessage={conversation.lastMessage?.content || ""}
+                lastMessage={conversation.lastMessage!}
               />
             );
           })}

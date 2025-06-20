@@ -37,3 +37,15 @@ export const fetchMessages = async ({ conversationId }: { conversationId: string
     return { messages: null, error };
   }
 };
+
+export const readConversation = async ({ conversationId, readAt }: { conversationId: string, readAt: Date }): Promise<{
+  conversationUser: unknown | null;
+  error: unknown | null;
+}> => {
+  try {
+    const response = await api.post(`/v1/conversation/read/${conversationId}`, { readAt });
+    return { ...response.data, error: null };
+  } catch (error) {
+    return { conversationUser: null, error };
+  }
+};

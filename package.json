@@ -35,6 +35,7 @@
     "zustand": "^5.0.5"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.15.29",
     "@types/react": "^18.3.10",
     "@types/react-dom": "^18.3.0",
@@ -54,9 +55,11 @@
     "eslint-plugin-promise": "^6.2.0",
     "eslint-plugin-react": "^7.34.2",
     "globals": "^15.9.0",
+    "jest": "^30.0.2",
     "postcss": "^8.4.47",
     "prettier": "^3.3.3",
     "prettier-eslint": "^16.3.0",
+    "ts-jest": "^29.4.0",
     "tw-animate-css": "^1.3.2",
     "typescript": "^5.6.2"
   }

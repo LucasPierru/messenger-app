@@ -8,6 +8,7 @@ interface Conversation {
   isGroup: boolean;
   pictureUrl?: string;
   lastMessage: IMessage | null;
+  lastReadAt: Date | null;
   lastActive: Date;
 }
 
@@ -22,6 +23,8 @@ type ChatState = {
   addMessage: (message: IMessage) => void;
   receiveMessage: (message: IMessage) => void;
   setMessages: (conversationId: string, messages: IMessage[]) => void;
+  updateConversationLastMessage: (conversationId: string, message: IMessage) => void;
+  updateConversationReadAt: (conversationId: string, readAt: Date) => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -82,5 +85,23 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const sorted = updated.sort((a, b) => new Date(b.lastActive).getTime() - new Date(a.lastActive).getTime());
 
     set({ conversations: sorted });
+  },
+
+  updateConversationLastMessage: (conversationId, message) => {
+    set((state) => ({
+      conversations: state.conversations.map((c) =>
+        c._id === conversationId
+          ? { ...c, lastMessage: message }
+          : c
+      ),
+    }));
+  },
+
+  updateConversationReadAt: (conversationId: string, readAt: Date) => {
+    set((state) => ({
+      conversations: state.conversations.map((c) =>
+        c._id === conversationId ? { ...c, lastReadAt: readAt } : c
+      ),
+    }));
   },
 }));

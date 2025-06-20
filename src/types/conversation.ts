@@ -13,5 +13,6 @@ export type IConversation = {
 
 export type IConversationWithUsers = {
   conversation: IConversation;
+  lastReadAt: Date | null;
   lastMessage: IMessage | null;
 };

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { fetchProfile, fetchProfiles } from "@/api/profile/profile";
 import { IUser } from "@/types/user";
 import { Button } from "@/components/ui/button";
-import { createConversation, fetchMessages } from "@/api/conversations/conversations";
+import { createConversation, fetchMessages, readConversation } from "@/api/conversations/conversations";
 import { IMessage } from "@/types/message";
 import GoBackButton from "@/components/go-back-button/go-back-button";
 import { useChatStore } from "@/store/useChatStore";
@@ -38,8 +38,20 @@ export default function Chat() {
     }
   };
 
+  const read = async () => {
+    if (!id) return;
+    const now = new Date();
+
+    await readConversation({
+      conversationId: id,
+      readAt: now,
+    });
+    useChatStore.getState().updateConversationReadAt(id, now);
+  };
+
   useEffect(() => {
     setActiveConversation(id || "new");
+    read();
     getMessages();
   }, [id]);
 
