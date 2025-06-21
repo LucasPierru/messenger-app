@@ -38,6 +38,18 @@ export const fetchMessages = async ({ conversationId }: { conversationId: string
   }
 };
 
+export const sendMessage = async ({ conversationId, content }: { conversationId: string; content: string }): Promise<{
+  message: IMessage | null;
+  error: unknown | null;
+}> => {
+  try {
+    const response: AxiosResponse<{ message: IMessage }> = await api.post(`/v1/conversation/message/create`, { conversationId, content });
+    return { ...response.data, error: null };
+  } catch (error) {
+    return { message: null, error };
+  }
+};
+
 export const readConversation = async ({ conversationId, readAt }: { conversationId: string, readAt: Date }): Promise<{
   conversationUser: unknown | null;
   error: unknown | null;

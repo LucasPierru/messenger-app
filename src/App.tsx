@@ -1,12 +1,13 @@
 import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./App.css";
+import { useEffect } from "react";
 import Login from "./pages/Login";
 import Navbar from "./components/navbar/navbar";
 import Chat from "./pages/Chat";
 import Register from "./pages/Register";
 import ChangePassword from "./pages/ChangePassword";
-import { useChatSocket } from "./hooks/useChatSocket";
+import { useAuthStore } from "./store/useAuthStore";
 
 const queryClient = new QueryClient();
 
@@ -24,7 +25,11 @@ const router = createBrowserRouter(
 );
 
 function App() {
-  useChatSocket();
+  const { connectSocket } = useAuthStore();
+
+  useEffect(() => {
+    connectSocket();
+  }, [connectSocket]);
 
   return (
     <QueryClientProvider client={queryClient}>

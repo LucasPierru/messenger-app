@@ -1,13 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useRef, useState, KeyboardEvent, Key, ChangeEvent, useMemo } from "react";
+import { useEffect, useRef, useState, KeyboardEvent, Key, ChangeEvent } from "react";
 import { SendHorizontalIcon } from "lucide-react";
-import { getSocket } from "../socket";
 import { Input } from "@/components/ui/input";
 import { fetchProfile, fetchProfiles } from "@/api/profile/profile";
 import { IUser } from "@/types/user";
 import { Button } from "@/components/ui/button";
-import { createConversation, fetchMessages, readConversation } from "@/api/conversations/conversations";
+import { createConversation, readConversation } from "@/api/conversations/conversations";
 import { IMessage } from "@/types/message";
 import GoBackButton from "@/components/go-back-button/go-back-button";
 import { useChatStore } from "@/store/useChatStore";
@@ -15,26 +14,29 @@ import { useChatStore } from "@/store/useChatStore";
 export default function Chat() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [searchedProfiles, setSearchedProfiles] = useState<IUser[]>([]);
   const [selectedProfiles, setSelectedProfiles] = useState<IUser[]>([]);
+
   const messageRef = useRef<HTMLInputElement>(null);
   const userRef = useRef<HTMLInputElement>(null);
-  const socket = useMemo(() => getSocket(localStorage.getItem("token") || ""), []);
+
   const setActiveConversation = useChatStore((s) => s.setActiveConversation);
-  const setMessages = useChatStore((s) => s.setMessages);
-  const msgs = useChatStore((s) => (id ? s.messages[id] : []));
+  const getMessages = useChatStore((s) => s.getMessages);
+  const sendMessage = useChatStore((s) => s.sendMessage);
+  const subscribeToMessages = useChatStore((s) => s.subscribeToMessages);
+  const unsubscribeFromMessages = useChatStore((s) => s.unsubscribeFromMessages);
+
+  const msgs = useChatStore((s) => (id ? s.messages : []));
 
   const profileQuery = useQuery({
     queryKey: ["profile"],
     queryFn: fetchProfile,
   });
 
-  const getMessages = async () => {
+  const fetchMessages = async () => {
     if (id) {
-      const { messages } = await fetchMessages({ conversationId: id });
-      if (messages) {
-        setMessages(id, messages);
-      }
+      await getMessages(id);
     }
   };
 
@@ -52,26 +54,26 @@ export default function Chat() {
   useEffect(() => {
     setActiveConversation(id || "new");
     read();
-    getMessages();
+    fetchMessages();
+    subscribeToMessages();
+
+    return () => unsubscribeFromMessages();
   }, [id]);
 
-  const sendMessage = () => {
+  const submitMessage = async () => {
     if (messageRef.current && messageRef.current.value) {
-      const newMessage: Omit<IMessage, "_id"> = {
+      const newMessage: Omit<IMessage, "_id" | "user" | "createdAt"> = {
         conversation: id!,
-        user: profileQuery.data?.profile?._id || "",
         content: messageRef.current.value,
-        createdAt: new Date(),
       };
-
-      socket.emit("message", id, newMessage);
+      await sendMessage(newMessage);
       messageRef.current.value = "";
     }
   };
 
-  const enterMessage = (event: KeyboardEvent<HTMLInputElement>) => {
+  const enterMessage = async (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
-      sendMessage();
+      await submitMessage();
     }
   };
 
@@ -100,7 +102,7 @@ export default function Chat() {
             {msgs?.map((message, index) => {
               return (
                 <span
-                  className={`w-fit max-w-[50%] px-4 py-2 rounded-2xl break-words text-sm lg:text-base font-medium ${(message.user as IUser)._id === profileQuery.data?.profile?._id ? "bg-[#0184fe] text-background self-end" : "bg-border"}`}
+                  className={`w-fit max-w-[50%] px-4 py-2 rounded-2xl break-words text-sm lg:text-base font-medium ${(message?.user as IUser)?._id === profileQuery.data?.profile?._id ? "bg-[#0184fe] text-background self-end" : "bg-border"}`}
                   key={index as Key}>
                   {message.content}
                 </span>
@@ -173,7 +175,7 @@ export default function Chat() {
       )}
       <div className="flex gap-2 p-4">
         <Input className="rounded-full py-2 px-4 w-full" placeholder="Aa" ref={messageRef} onKeyDown={enterMessage} />
-        <Button className="rounded-full" size="icon" onClick={sendMessage}>
+        <Button className="rounded-full" size="icon" onClick={submitMessage}>
           <SendHorizontalIcon />
         </Button>
       </div>

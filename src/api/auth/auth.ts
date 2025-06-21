@@ -26,7 +26,7 @@ export const login = async ({ email, password }: LoginCredentials): Promise<{ da
   }
 };
 
-export const signup = async ({ email, firstName, lastName, password }: SignupCredentials) => {
+export const signup = async ({ email, firstName, lastName, password }: SignupCredentials): Promise<{ data: AuthResponse | null; error: unknown }> => {
   try {
     const response = await api.post("/v1/auth/register", { email, firstName, lastName, password });
     localStorage.setItem("token", response.data.token); // Save the token

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { IMessage } from '@/types/message';
-import { isPopulatedConversation } from '@/lib/utils';
+import { fetchMessages, sendMessage } from '@/api/conversations/conversations';
+import { useAuthStore } from './useAuthStore';
 
 interface Conversation {
   _id: string;
@@ -14,22 +15,24 @@ interface Conversation {
 
 type ChatState = {
   conversations: Conversation[];
-  messages: Record<string, IMessage[]>;
+  messages: IMessage[];
   activeConversationId: string | null;
 
   // Actions
   setConversations: (convos: Conversation[]) => void;
   setActiveConversation: (id: string) => void;
-  addMessage: (message: IMessage) => void;
-  receiveMessage: (message: IMessage) => void;
-  setMessages: (conversationId: string, messages: IMessage[]) => void;
+  /* receiveMessage: (message: IMessage) => void; */
+  getMessages: (conversationId: string) => Promise<void>;
+  sendMessage: (messageData: { content: string }) => Promise<void>;
+  subscribeToMessages: () => void;
+  unsubscribeFromMessages: () => void;
   updateConversationLastMessage: (conversationId: string, message: IMessage) => void;
   updateConversationReadAt: (conversationId: string, readAt: Date) => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
   conversations: [],
-  messages: {},
+  messages: [],
   activeConversationId: null,
 
   setConversations: (convos) => {
@@ -40,29 +43,50 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ activeConversationId: id });
   },
 
-  addMessage: (message) => {
-    const { messages } = get();
-    const convoId = isPopulatedConversation(message.conversation) ? message.conversation._id : message.conversation;
+  getMessages: async (conversationId: string) => {
+    try {
+      const { messages } = await fetchMessages({ conversationId })
+      set({
+        messages: messages ?? [],
+      });
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  },
 
-    const convoMessages = messages[convoId] || [];
-    set({
-      messages: {
-        ...messages,
-        [convoId]: [...convoMessages, message],
-      },
+  sendMessage: async (messageData: { content: string }) => {
+    const { activeConversationId, messages } = get();
+    try {
+      const { message } = await sendMessage({ conversationId: activeConversationId!, content: messageData.content });
+      set({ messages: [message!, ...messages] });
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  },
+
+  subscribeToMessages: () => {
+    const { activeConversationId } = get();
+    if (!activeConversationId) return;
+
+    const { socket, authUser } = useAuthStore.getState();
+
+    socket?.on("newMessage", (newMessage) => {
+      const isMessageSentFromCurrentUser = newMessage.user._id === authUser?._id;
+      if (isMessageSentFromCurrentUser) return;
+
+      set({
+        messages: [newMessage, ...get().messages],
+      });
     });
+
   },
 
-  setMessages: (conversationId: string, messages: IMessage[]) => {
-    set((state) => ({
-      messages: {
-        ...state.messages,
-        [conversationId]: messages,
-      },
-    }));
+  unsubscribeFromMessages: () => {
+    const { socket } = useAuthStore.getState();
+    socket?.off("newMessage");
   },
 
-  receiveMessage: (message) => {
+  /* receiveMessage: (message) => {
     const convoId = isPopulatedConversation(message.conversation) ? message.conversation._id : message.conversation;
     const state = get();
 
@@ -85,7 +109,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const sorted = updated.sort((a, b) => new Date(b.lastActive).getTime() - new Date(a.lastActive).getTime());
 
     set({ conversations: sorted });
-  },
+  }, */
 
   updateConversationLastMessage: (conversationId, message) => {
     set((state) => ({

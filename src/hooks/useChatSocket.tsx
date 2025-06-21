@@ -5,8 +5,9 @@ import { getSocket } from "@/socket";
 export const useChatSocket = () => {
   const receiveMessage = useChatStore((s) => s.receiveMessage);
   const updateConversationLastMessage = useChatStore((s) => s.updateConversationLastMessage);
-  const socket = useMemo(() => getSocket(localStorage.getItem("token") || ""), []);
   const activeConversationId = useChatStore((s) => s.activeConversationId);
+
+  const socket = useMemo(() => getSocket(localStorage.getItem("token") || ""), []);
 
   const joinRoom = (id: string) => {
     socket.emit("joinRoom", id);
@@ -25,12 +26,14 @@ export const useChatSocket = () => {
     });
 
     socket.on("message", (message) => {
-      receiveMessage(message);
-      updateConversationLastMessage(message.conversation, message);
+      receiveMessage(message.message);
+      console.log({ message });
+      updateConversationLastMessage(message.conversation._id, message.message);
     });
 
     return () => {
       socket.disconnect();
+      socket.off("message");
     };
   }, []);
 
@@ -44,4 +47,10 @@ export const useChatSocket = () => {
       leaveRoom(activeConversationId);
     };
   }, [activeConversationId]);
+
+  return {
+    socket,
+    joinRoom,
+    leaveRoom,
+  };
 };
