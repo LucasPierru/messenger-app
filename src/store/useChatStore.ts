@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { IMessage } from '@/types/message';
-import { fetchMessages, sendMessage } from '@/api/conversations/conversations';
+import { fetchConversations, fetchMessages, readConversation, sendMessage } from '@/api/conversations/conversations';
 import { useAuthStore } from './useAuthStore';
 
 interface Conversation {
@@ -26,8 +26,9 @@ type ChatState = {
   sendMessage: (messageData: { content: string }) => Promise<void>;
   subscribeToMessages: () => void;
   unsubscribeFromMessages: () => void;
+  getConversations: () => Promise<void>;
   updateConversationLastMessage: (conversationId: string, message: IMessage) => void;
-  updateConversationReadAt: (conversationId: string, readAt: Date) => void;
+  updateConversationReadAt: (conversationId: string, readAt: Date) => Promise<void>;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -66,17 +67,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   subscribeToMessages: () => {
     const { activeConversationId } = get();
-    if (!activeConversationId) return;
-
     const { socket, authUser } = useAuthStore.getState();
+
+    if (!socket) return;
 
     socket?.on("newMessage", (newMessage) => {
       const isMessageSentFromCurrentUser = newMessage.user._id === authUser?._id;
       if (isMessageSentFromCurrentUser) return;
 
-      set({
-        messages: [newMessage, ...get().messages],
-      });
+      if (activeConversationId) {
+        set({
+          messages: [newMessage, ...get().messages],
+        });
+        get().updateConversationReadAt(activeConversationId, new Date());
+      }
+      get().updateConversationLastMessage(newMessage.conversation._id, newMessage);
     });
 
   },
@@ -86,42 +91,37 @@ export const useChatStore = create<ChatState>((set, get) => ({
     socket?.off("newMessage");
   },
 
-  /* receiveMessage: (message) => {
-    const convoId = isPopulatedConversation(message.conversation) ? message.conversation._id : message.conversation;
-    const state = get();
-
-    // 1. Add message if active
-    if (state.activeConversationId === convoId) {
-      get().addMessage(message);
-    }
-
-    // 2. Update conversations list
-    const updated = state.conversations.map((c) =>
-      c._id === convoId
-        ? {
-          ...c,
-          lastMessage: message,
-          lastActive: message.createdAt,
-        }
-        : c
-    );
-
-    const sorted = updated.sort((a, b) => new Date(b.lastActive).getTime() - new Date(a.lastActive).getTime());
-
-    set({ conversations: sorted });
-  }, */
+  getConversations: async () => {
+    const { conversations } = await fetchConversations();
+    const newConversations = conversations.map((c) => ({
+      _id: c.conversation._id,
+      name: c.conversation.name,
+      pictureUrl: c.conversation.pictureUrl,
+      isGroup: c.conversation.isGroup,
+      lastActive: c.conversation.lastActive || new Date().toISOString(),
+      lastReadAt: c.lastReadAt || null,
+      lastMessage: c.lastMessage,
+    }));
+    set({ conversations: newConversations });
+  },
 
   updateConversationLastMessage: (conversationId, message) => {
+    const { activeConversationId } = get();
+
     set((state) => ({
       conversations: state.conversations.map((c) =>
         c._id === conversationId
-          ? { ...c, lastMessage: message }
+          ? { ...c, lastReadAt: activeConversationId === c._id ? new Date() : c.lastReadAt, lastMessage: message }
           : c
       ),
     }));
   },
 
-  updateConversationReadAt: (conversationId: string, readAt: Date) => {
+  updateConversationReadAt: async (conversationId: string, readAt: Date) => {
+    await readConversation({
+      conversationId,
+      readAt,
+    });
     set((state) => ({
       conversations: state.conversations.map((c) =>
         c._id === conversationId ? { ...c, lastReadAt: readAt } : c

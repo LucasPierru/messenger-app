@@ -16,6 +16,7 @@ const Conversation = ({ id, imageUrl, title, lastMessage }: ConversationProps) =
   const isConversationUnread = () => {
     const lastRead = useChatStore.getState().conversations.find((c) => c._id === id)?.lastReadAt;
     const lastMsg = lastMessage;
+    console.log("Last Read:", lastRead, "Last Message Date:", lastMsg.createdAt);
     return lastMsg && (!lastRead || new Date(lastMsg.createdAt) > new Date(lastRead));
   };
 

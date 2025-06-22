@@ -1,9 +1,7 @@
-/* eslint-disable no-underscore-dangle */
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PencilSquareIcon } from "@heroicons/react/24/solid";
 import { Link, useParams } from "react-router-dom";
-import { fetchConversations } from "@/api/conversations/conversations";
 import { fetchProfile } from "@/api/profile/profile";
 import Conversation from "../conversation/conversation";
 import ProfileButton from "../profile-button/profile-button";
@@ -15,25 +13,11 @@ const Conversations = () => {
     queryKey: ["profile"],
     queryFn: fetchProfile,
   });
+  const conversations = useChatStore((state) => state.conversations);
+  const getConversations = useChatStore((state) => state.getConversations);
 
   const isMobile = useIsMobile();
   const { id } = useParams();
-
-  const getConversations = async () => {
-    const { conversations } = await fetchConversations();
-    const newConversations = conversations.map((c) => ({
-      _id: c.conversation._id,
-      name: c.conversation.name,
-      pictureUrl: c.conversation.pictureUrl,
-      isGroup: c.conversation.isGroup,
-      lastActive: c.conversation.lastActive || new Date().toISOString(),
-      lastReadAt: c.lastReadAt || null,
-      lastMessage: c.lastMessage,
-    }));
-    useChatStore.getState().setConversations(newConversations);
-  };
-
-  const conversations = useChatStore((state) => state.conversations);
 
   useEffect(() => {
     getConversations();

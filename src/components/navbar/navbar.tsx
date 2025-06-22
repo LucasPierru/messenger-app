@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import Conversations from "../conversations/conversation";
+import Conversations from "../conversations/conversations";
 
 export default function Navbar() {
   return (

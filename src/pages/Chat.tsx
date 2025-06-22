@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { fetchProfile, fetchProfiles } from "@/api/profile/profile";
 import { IUser } from "@/types/user";
 import { Button } from "@/components/ui/button";
-import { createConversation, readConversation } from "@/api/conversations/conversations";
+import { createConversation } from "@/api/conversations/conversations";
 import { IMessage } from "@/types/message";
 import GoBackButton from "@/components/go-back-button/go-back-button";
 import { useChatStore } from "@/store/useChatStore";
@@ -22,10 +22,9 @@ export default function Chat() {
   const userRef = useRef<HTMLInputElement>(null);
 
   const setActiveConversation = useChatStore((s) => s.setActiveConversation);
+  const updateConversationReadAt = useChatStore((s) => s.updateConversationReadAt);
   const getMessages = useChatStore((s) => s.getMessages);
   const sendMessage = useChatStore((s) => s.sendMessage);
-  const subscribeToMessages = useChatStore((s) => s.subscribeToMessages);
-  const unsubscribeFromMessages = useChatStore((s) => s.unsubscribeFromMessages);
 
   const msgs = useChatStore((s) => (id ? s.messages : []));
 
@@ -40,24 +39,16 @@ export default function Chat() {
     }
   };
 
-  const read = async () => {
+  const readConversation = async () => {
     if (!id) return;
     const now = new Date();
-
-    await readConversation({
-      conversationId: id,
-      readAt: now,
-    });
-    useChatStore.getState().updateConversationReadAt(id, now);
+    await updateConversationReadAt(id, now);
   };
 
   useEffect(() => {
     setActiveConversation(id || "new");
-    read();
+    readConversation();
     fetchMessages();
-    subscribeToMessages();
-
-    return () => unsubscribeFromMessages();
   }, [id]);
 
   const submitMessage = async () => {
