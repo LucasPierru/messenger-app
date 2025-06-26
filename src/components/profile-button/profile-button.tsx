@@ -8,10 +8,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { logout } from "@/api/auth/auth";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const ProfileButton = ({ firstName, lastName }: { firstName: string; lastName: string }) => {
   const navigate = useNavigate();
+  const { logout } = useAuthStore();
   const handleLogout = async () => {
     await logout();
     navigate("/");

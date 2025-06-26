@@ -10,6 +10,7 @@ import { createConversation } from "@/api/conversations/conversations";
 import { IMessage } from "@/types/message";
 import GoBackButton from "@/components/go-back-button/go-back-button";
 import { useChatStore } from "@/store/useChatStore";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function Chat() {
   const { id } = useParams();

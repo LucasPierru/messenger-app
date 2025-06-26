@@ -1,11 +1,11 @@
 import { create } from "zustand";
-import { Socket, io } from "socket.io-client";
-import { IUser } from "@/types/user";
-import { login, signup, logout } from "@/api/auth/auth";
+import { Socket } from "socket.io-client";
+import { login, signup, logout, checkAuth } from "@/api/auth/auth";
 import { getSocket } from "@/socket";
+import { AuthResponse, AuthUser, LoginCredentials, SignupCredentials } from "@/types/auth";
 
 type AuthState = {
-  authUser: IUser | null; // Replace 'any' with your user type
+  authUser: AuthUser | null; // Replace 'any' with your user type
   isSigningUp: boolean;
   isLoggingIn: boolean;
   isUpdatingProfile: boolean;
@@ -13,8 +13,9 @@ type AuthState = {
   onlineUsers: string[];
   socket: Socket | null;
 
-  signup: (data: any) => Promise<void>; // Replace 'any' with your signup data type
-  login: (data: any) => Promise<void>; // Replace 'any' with your login data type
+  checkAuth: () => Promise<void>;
+  signup: (data: SignupCredentials) => Promise<AuthResponse | null>; // Replace 'any' with your signup data type
+  login: (data: LoginCredentials) => Promise<AuthResponse | null>; // Replace 'any' with your login data type
   logout: () => Promise<void>;
   /* updateProfile: (data: any) => Promise<void>; // Replace 'any' with your profile update data type */
   connectSocket: () => void;
@@ -30,11 +31,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   onlineUsers: [],
   socket: null,
 
-  /* checkAuth: async () => {
+  checkAuth: async () => {
     try {
-      const res = await axiosInstance.get("/auth/check");
-
-      set({ authUser: res.data });
+      const res = await checkAuth();
+      set({ authUser: res.data?.user ?? null });
       get().connectSocket();
     } catch (error) {
       console.log("Error in checkAuth:", error);
@@ -42,17 +42,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } finally {
       set({ isCheckingAuth: false });
     }
-  }, */
+  },
 
   signup: async (data) => {
     set({ isSigningUp: true });
     try {
       const res = await signup(data);
-      set({ authUser: res.data });
+      set({ authUser: res.data?.user });
       get().connectSocket();
+      return res.data
     } catch (error) {
       console.log("Error in signup:", error);
       set({ authUser: null });
+      return null
     } finally {
       set({ isSigningUp: false });
     }
@@ -62,11 +64,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoggingIn: true });
     try {
       const res = await login(data)
-      set({ authUser: res.data });
+      set({ authUser: res.data?.user });
       get().connectSocket();
+      return res.data
     } catch (error) {
       console.log("Error in login:", error);
       set({ authUser: null });
+      return null
     } finally {
       set({ isLoggingIn: false });
     }
@@ -97,9 +101,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   }, */
 
   connectSocket: () => {
-    /* const { authUser } = get();
+    const { authUser } = get();
     if (!authUser || get().socket?.connected) return;
- */
+
     const token = localStorage.getItem("token");
 
     if (!token || get().socket?.connected) return;

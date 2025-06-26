@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RegisterFormData, registerSchema } from "../lib/inputValidation/registrationValidation";
-import { signup } from "../api/auth/auth";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function Register() {
   const {
@@ -13,19 +13,20 @@ export default function Register() {
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
+
   const navigate = useNavigate();
+  const { signup } = useAuthStore();
 
   const onSubmit = async (data: RegisterFormData) => {
     const { email, firstName, lastName, password } = data;
-    const { data: userData, error } = await signup({
+    const userData = await signup({
       email,
       firstName,
       lastName,
       password,
     });
-    console.log({ userData, error });
-    if (error) {
-      console.error("Error signing up:", error);
+    if (!userData) {
+      console.error("Error signing up");
       return;
     }
     reset();

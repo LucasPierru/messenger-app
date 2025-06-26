@@ -1,7 +1,8 @@
-import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from "react-router-dom";
+import { Navigate, Route, BrowserRouter, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./App.css";
 import { useEffect } from "react";
+import { Loader } from "lucide-react";
 import Login from "./pages/Login";
 import Navbar from "./components/navbar/navbar";
 import Chat from "./pages/Chat";
@@ -12,30 +13,33 @@ import { useChatSocket } from "./hooks/useChatSocket";
 
 const queryClient = new QueryClient();
 
-const router = createBrowserRouter(
-  createRoutesFromElements(
-    <Route path="/">
-      <Route index element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/change-password" element={<ChangePassword />} />
-      <Route path="/conversation" element={<Navbar />}>
-        <Route path="/conversation/:id" element={<Chat />} />
-      </Route>
-    </Route>
-  )
-);
-
 function App() {
-  const { connectSocket } = useAuthStore();
+  const { checkAuth, authUser, isCheckingAuth } = useAuthStore();
   useChatSocket();
 
   useEffect(() => {
-    connectSocket();
-  }, [connectSocket]);
+    checkAuth();
+  }, [checkAuth]);
+
+  if (isCheckingAuth && !authUser)
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader className="size-10 animate-spin" />
+      </div>
+    );
 
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={!authUser ? <Login /> : <Navigate to="/conversation" />} />
+          <Route path="/register" element={!authUser ? <Register /> : <Navigate to="/conversation" />} />
+          <Route path="/change-password" element={<ChangePassword />} />
+          <Route path="/conversation" element={authUser ? <Navbar /> : <Navigate to="/" />}>
+            <Route path="/conversation/:id" element={<Chat />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }
