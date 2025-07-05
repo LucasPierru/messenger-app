@@ -45,11 +45,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   getMessages: async (conversationId: string) => {
+    const { messages } = get();
     try {
-      const { messages } = await fetchMessages({ conversationId })
-      set({
-        messages: messages ?? [],
-      });
+      const { messages: newMessages } = await fetchMessages({ conversationId })
+      if (newMessages) {
+        set({
+          messages: [...messages, ...newMessages],
+        });
+      }
     } catch (error) {
       console.error("Error fetching messages:", error);
     }
@@ -72,7 +75,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (!socket) return;
 
     socket?.on("newMessage", (newMessage) => {
-      const isMessageSentFromCurrentUser = newMessage.user._id === authUser?._id;
+      const isMessageSentFromCurrentUser = newMessage.user._id === authUser?.id;
       if (isMessageSentFromCurrentUser) return;
 
       if (activeConversationId) {

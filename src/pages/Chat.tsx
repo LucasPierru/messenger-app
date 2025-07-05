@@ -94,7 +94,7 @@ export default function Chat() {
             {msgs?.map((message, index) => {
               return (
                 <span
-                  className={`w-fit max-w-[50%] px-4 py-2 rounded-2xl break-words text-sm lg:text-base font-medium ${(message?.user as IUser)?._id === profileQuery.data?.profile?._id ? "bg-[#0184fe] text-background self-end" : "bg-border"}`}
+                  className={`w-fit max-w-[50%] px-4 py-2 rounded-2xl break-words text-foreground text-sm lg:text-base font-medium ${(message?.user as IUser)?._id === profileQuery.data?.profile?._id ? "bg-[#0184fe] self-end" : "bg-border"}`}
                   key={index as Key}>
                   {message.content}
                 </span>

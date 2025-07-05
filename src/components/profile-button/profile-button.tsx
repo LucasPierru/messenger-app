@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,8 +32,12 @@ const ProfileButton = ({ firstName, lastName }: { firstName: string; lastName: s
       <DropdownMenuContent>
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Profile</DropdownMenuItem>
-        <DropdownMenuItem>Settings</DropdownMenuItem>
+        <DropdownMenuItem>
+          <Link to="/profile">Profile</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem>
+          <Link to="/settings">Settings</Link>
+        </DropdownMenuItem>
         <DropdownMenuItem>
           <button type="button" onClick={handleLogout}>
             Logout

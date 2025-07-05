@@ -3,6 +3,9 @@ import { Socket } from "socket.io-client";
 import { login, signup, logout, checkAuth } from "@/api/auth/auth";
 import { getSocket } from "@/socket";
 import { AuthResponse, AuthUser, LoginCredentials, SignupCredentials } from "@/types/auth";
+import { ProfileFormData } from "@/lib/inputValidation/profileValidation";
+import { updateProfile } from "@/api/profile/profile";
+import { IUser } from "@/types/user";
 
 type AuthState = {
   authUser: AuthUser | null; // Replace 'any' with your user type
@@ -17,7 +20,7 @@ type AuthState = {
   signup: (data: SignupCredentials) => Promise<AuthResponse | null>; // Replace 'any' with your signup data type
   login: (data: LoginCredentials) => Promise<AuthResponse | null>; // Replace 'any' with your login data type
   logout: () => Promise<void>;
-  /* updateProfile: (data: any) => Promise<void>; // Replace 'any' with your profile update data type */
+  updateProfile: (data: ProfileFormData) => Promise<{ profile: IUser | null, error: unknown | null }>; // Replace 'any' with your profile update data type
   connectSocket: () => void;
   disconnectSocket: () => void;
 }
@@ -86,19 +89,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  /* updateProfile: async (data) => {
+  updateProfile: async (data) => {
     set({ isUpdatingProfile: true });
     try {
-      const res = await axiosInstance.put("/auth/update-profile", data);
-      set({ authUser: res.data });
-      toast.success("Profile updated successfully");
+      const { profile, error } = await updateProfile(data);
+      // toast.success("Profile updated successfully");
+      return { profile, error }
     } catch (error) {
       console.log("error in update profile:", error);
-      toast.error(error.response.data.message);
+      // toast.error(error.response.data.message);
+      return { profile: null, error }
     } finally {
       set({ isUpdatingProfile: false });
     }
-  }, */
+  },
 
   connectSocket: () => {
     const { authUser } = get();

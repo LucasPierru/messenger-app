@@ -28,13 +28,14 @@ export const createConversation = async (userIds: string[]): Promise<{
 
 export const fetchMessages = async ({ conversationId }: { conversationId: string }): Promise<{
   messages: IMessage[] | null;
+  hasMore: boolean;
   error: unknown | null;
 }> => {
   try {
     const response = await api.get(`/v1/conversation/messages/${conversationId}`);
     return { ...response.data, error: null };
   } catch (error) {
-    return { messages: null, error };
+    return { messages: null, hasMore: false, error };
   }
 };
 

@@ -3,7 +3,7 @@ import Conversations from "../conversations/conversations";
 
 export default function Navbar() {
   return (
-    <div className="flex flex-1 min-h-screen">
+    <div className="flex flex-1 min-h-screen dark bg-background">
       <Conversations />
       <Outlet />
     </div>

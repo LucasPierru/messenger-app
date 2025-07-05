@@ -1,5 +1,6 @@
 import { IUser } from "@/types/user";
 import api from "../api";
+import { ProfileFormData } from "@/lib/inputValidation/profileValidation";
 
 export const fetchProfile = async (): Promise<{
   profile: IUser | null;
@@ -25,3 +26,14 @@ export const fetchProfiles = async (search: string): Promise<{
   }
 };
 
+export const updateProfile = async (data: ProfileFormData): Promise<{
+  profile: IUser | null;
+  error: unknown | null;
+}> => {
+  try {
+    const response = await api.post("/v1/profile/update", data);
+    return { ...response.data, error: null };
+  } catch (error) {
+    return { profile: null, error };
+  }
+};

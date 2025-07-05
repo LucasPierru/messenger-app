@@ -2,12 +2,13 @@ import { Navigate, Route, BrowserRouter, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./App.css";
 import { useEffect } from "react";
-import { Loader } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import Login from "./pages/Login";
 import Navbar from "./components/navbar/navbar";
 import Chat from "./pages/Chat";
 import Register from "./pages/Register";
 import ChangePassword from "./pages/ChangePassword";
+import Profile from "./pages/Profile";
 import { useAuthStore } from "./store/useAuthStore";
 import { useChatSocket } from "./hooks/useChatSocket";
 
@@ -24,7 +25,7 @@ function App() {
   if (isCheckingAuth && !authUser)
     return (
       <div className="flex items-center justify-center h-screen">
-        <Loader className="size-10 animate-spin" />
+        <LoaderCircle className="size-20 animate-spin" />
       </div>
     );
 
@@ -38,6 +39,7 @@ function App() {
           <Route path="/conversation" element={authUser ? <Navbar /> : <Navigate to="/" />}>
             <Route path="/conversation/:id" element={<Chat />} />
           </Route>
+          <Route path="/profile" element={authUser ? <Profile /> : <Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

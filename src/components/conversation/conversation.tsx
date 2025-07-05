@@ -35,7 +35,7 @@ const Conversation = ({ id, imageUrl, title, lastMessage }: ConversationProps) =
         <span className="text-base font-semibold">{title}</span>
         <div className="flex items-center gap-2">
           {isUnread && <span className="bg-blue-500 rounded-full w-1 h-1" />}
-          <span className={`text-sm line-clamp-1 ${isUnread ? "font-bold" : "font-normal"}`}>
+          <span className={`text-sm line-clamp-1 text-foreground ${isUnread ? "font-bold" : "font-normal"}`}>
             {lastMessage.content}
           </span>
         </div>
