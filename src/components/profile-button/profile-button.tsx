@@ -23,7 +23,7 @@ const ProfileButton = ({ firstName, lastName }: { firstName: string; lastName: s
       <DropdownMenuTrigger>
         <Avatar className="w-12 h-12">
           <AvatarImage src="/Punks.jpg" />
-          <AvatarFallback>
+          <AvatarFallback className="text-foreground">
             {firstName[0]}
             {lastName[0]}
           </AvatarFallback>

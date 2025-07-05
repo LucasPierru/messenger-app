@@ -45,6 +45,7 @@ const Conversations = () => {
                 imageUrl={conversation.pictureUrl}
                 title={conversation.name}
                 lastMessage={conversation.lastMessage!}
+                isGroup={conversation.isGroup}
               />
             );
           })}
