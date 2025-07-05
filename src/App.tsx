@@ -25,7 +25,7 @@ function App() {
   if (isCheckingAuth && !authUser)
     return (
       <div className="flex items-center justify-center h-screen">
-        <LoaderCircle className="size-20 animate-spin" />
+        <LoaderCircle className="size-20 animate-spin text-foreground" />
       </div>
     );
 

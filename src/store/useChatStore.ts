@@ -21,20 +21,25 @@ type ChatState = {
   // Actions
   setConversations: (convos: Conversation[]) => void;
   setActiveConversation: (id: string) => void;
-  /* receiveMessage: (message: IMessage) => void; */
-  getMessages: (conversationId: string) => Promise<void>;
+  getMessages: (conversationId: string, limit?: number, page?: number) => Promise<void>;
   sendMessage: (messageData: { content: string }) => Promise<void>;
   subscribeToMessages: () => void;
   unsubscribeFromMessages: () => void;
   getConversations: () => Promise<void>;
   updateConversationLastMessage: (conversationId: string, message: IMessage) => void;
   updateConversationReadAt: (conversationId: string, readAt: Date) => Promise<void>;
+  isConversationsLoading: boolean;
+  isMessagesLoading: boolean;
+  hasMoreMessages: boolean;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
   conversations: [],
   messages: [],
   activeConversationId: null,
+  isConversationsLoading: false,
+  isMessagesLoading: false,
+  hasMoreMessages: true,
 
   setConversations: (convos) => {
     set({ conversations: convos.sort((a, b) => new Date(b.lastActive).getTime() - new Date(a.lastActive).getTime()) });
@@ -44,17 +49,23 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ activeConversationId: id });
   },
 
-  getMessages: async (conversationId: string) => {
+  getMessages: async (conversationId: string, limit?: number, page?: number) => {
     const { messages } = get();
+    set({ isMessagesLoading: !limit || !page });
     try {
-      const { messages: newMessages } = await fetchMessages({ conversationId })
-      if (newMessages) {
-        set({
-          messages: [...messages, ...newMessages],
-        });
+      const { messages: olderMessages } = await fetchMessages({ conversationId, ...(limit && { limit }), ...(page && { page }) });
+      if (!olderMessages) {
+        set({ hasMoreMessages: false });
+        return;
       }
+      set({
+        messages: limit && page ? [...olderMessages, ...messages] : olderMessages ?? [],
+      });
+      set({ hasMoreMessages: olderMessages.length === (limit ?? 20) });
     } catch (error) {
       console.error("Error fetching messages:", error);
+    } finally {
+      set({ isMessagesLoading: false });
     }
   },
 
@@ -95,17 +106,24 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   getConversations: async () => {
-    const { conversations } = await fetchConversations();
-    const newConversations = conversations.map((c) => ({
-      _id: c.conversation._id,
-      name: c.conversation.name,
-      pictureUrl: c.conversation.pictureUrl,
-      isGroup: c.conversation.isGroup,
-      lastActive: c.conversation.lastActive || new Date().toISOString(),
-      lastReadAt: c.lastReadAt || null,
-      lastMessage: c.lastMessage,
-    }));
-    set({ conversations: newConversations });
+    set({ isConversationsLoading: true });
+    try {
+      const { conversations } = await fetchConversations();
+      const newConversations = conversations.map((c) => ({
+        _id: c.conversation._id,
+        name: c.conversation.name,
+        pictureUrl: c.conversation.pictureUrl,
+        isGroup: c.conversation.isGroup,
+        lastActive: c.conversation.lastActive || new Date().toISOString(),
+        lastReadAt: c.lastReadAt || null,
+        lastMessage: c.lastMessage,
+      }));
+      set({ conversations: newConversations });
+    } catch (error) {
+      console.error("Error fetching conversations:", error);
+    } finally {
+      set({ isConversationsLoading: false });
+    }
   },
 
   updateConversationLastMessage: (conversationId, message) => {

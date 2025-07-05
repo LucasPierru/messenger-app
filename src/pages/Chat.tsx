@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useRef, useState, KeyboardEvent, Key, ChangeEvent } from "react";
+import { useEffect, useRef, useState, KeyboardEvent, ChangeEvent } from "react";
 import { SendHorizontalIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { fetchProfile, fetchProfiles } from "@/api/profile/profile";
@@ -10,7 +10,7 @@ import { createConversation } from "@/api/conversations/conversations";
 import { IMessage } from "@/types/message";
 import GoBackButton from "@/components/go-back-button/go-back-button";
 import { useChatStore } from "@/store/useChatStore";
-import { useAuthStore } from "@/store/useAuthStore";
+import Message from "@/components/message/message";
 
 export default function Chat() {
   const { id } = useParams();
@@ -18,14 +18,19 @@ export default function Chat() {
 
   const [searchedProfiles, setSearchedProfiles] = useState<IUser[]>([]);
   const [selectedProfiles, setSelectedProfiles] = useState<IUser[]>([]);
+  const [page, setPage] = useState(2);
 
   const messageRef = useRef<HTMLInputElement>(null);
   const userRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const setActiveConversation = useChatStore((s) => s.setActiveConversation);
   const updateConversationReadAt = useChatStore((s) => s.updateConversationReadAt);
   const getMessages = useChatStore((s) => s.getMessages);
   const sendMessage = useChatStore((s) => s.sendMessage);
+  const isMessagesLoading = useChatStore((s) => s.isMessagesLoading);
+  const hasMoreMessages = useChatStore((s) => s.hasMoreMessages);
 
   const msgs = useChatStore((s) => (id ? s.messages : []));
 
@@ -45,12 +50,6 @@ export default function Chat() {
     const now = new Date();
     await updateConversationReadAt(id, now);
   };
-
-  useEffect(() => {
-    setActiveConversation(id || "new");
-    readConversation();
-    fetchMessages();
-  }, [id]);
 
   const submitMessage = async () => {
     if (messageRef.current && messageRef.current.value) {
@@ -81,6 +80,39 @@ export default function Chat() {
     }
   };
 
+  const handleScroll = async () => {
+    const container = containerRef.current;
+    if (!container || isMessagesLoading || !hasMoreMessages) return;
+
+    if (id && container.scrollTop === 0 && hasMoreMessages) {
+      if (!container) return;
+
+      const prevScrollHeight = container.scrollHeight;
+      const prevScrollTop = container.scrollTop;
+      await getMessages(id, 20, page);
+      setPage((prevPage) => prevPage + 1);
+      requestAnimationFrame(() => {
+        const newScrollHeight = container.scrollHeight;
+        const heightDiff = newScrollHeight - prevScrollHeight;
+
+        // ✅ This keeps the scroll position visually the same
+        container.scrollTop = prevScrollTop + heightDiff;
+      });
+    }
+  };
+
+  useEffect(() => {
+    setActiveConversation(id || "new");
+    readConversation();
+    fetchMessages();
+  }, [id]);
+
+  useEffect(() => {
+    if (scrollRef.current && msgs.length <= 20) {
+      scrollRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [msgs]);
+
   return (
     <main className="flex flex-col justify-between w-full max-h-screen">
       {id && id !== "new" && (
@@ -90,16 +122,14 @@ export default function Chat() {
             <img className="rounded-full" src="/Punk.jpg" alt="Name" height={40} width={40} />
             <h1 className="font-semibold">Name</h1>
           </div>
-          <div className="flex flex-col-reverse gap-2 grow p-4 overflow-y-auto h-full">
-            {msgs?.map((message, index) => {
-              return (
-                <span
-                  className={`w-fit max-w-[50%] px-4 py-2 rounded-2xl break-words text-foreground text-sm lg:text-base font-medium ${(message?.user as IUser)?._id === profileQuery.data?.profile?._id ? "bg-[#0184fe] self-end" : "bg-border"}`}
-                  key={index as Key}>
-                  {message.content}
-                </span>
-              );
+          <div
+            className="flex flex-col gap-2 grow p-4 overflow-y-auto h-full"
+            ref={containerRef}
+            onScroll={handleScroll}>
+            {msgs?.map((message) => {
+              return <Message message={message} userId={profileQuery.data?.profile?._id!} key={message._id} />;
             })}
+            <div ref={scrollRef} />
           </div>
         </>
       )}
